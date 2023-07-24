@@ -1,10 +1,10 @@
-package controller;
+package ru.yandex.practicum.filmorate.controller;
 
-import exceptions.FilmException;
-import exceptions.ValidationException;
 import lombok.extern.slf4j.Slf4j;
-import model.Film;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exceptions.FilmException;
+import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.model.Film;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
@@ -39,16 +39,16 @@ public class FilmController {
 
     @PutMapping
     public Film updateFilm(@Valid @RequestBody Film film) {
-            if (films.get(film.getId()) != null) {
-                isValid(film);
-                films.put(film.getId(), film);
-                log.info("Запрос на изменение фильма. Фильм изменён.");
-            } else {
-                log.error("Запрос на изменение фильма. Фильм не найден.");
-                throw new FilmException("Фильм не найден.");
-            }
-            return film;
+        if (films.get(film.getId()) != null) {
+            isValid(film);
+            films.put(film.getId(), film);
+            log.info("Запрос на изменение фильма. Фильм изменён.");
+        } else {
+            log.error("Запрос на изменение фильма. Фильм не найден.");
+            throw new FilmException("Фильм не найден.");
         }
+        return film;
+    }
 
 
     @GetMapping
@@ -58,7 +58,7 @@ public class FilmController {
 
     private void isValid(Film film) throws ValidationException {
         if (film.getReleaseDate().isBefore(LocalDate.parse("1895-12-28"))) {
-            throw new ValidationException("Некорректно указана дата релиза.");
+            throw new ValidationException("Дата указана неккоректно.");
         }
     }
 
@@ -67,7 +67,7 @@ public class FilmController {
 
 
         public int getNextFreeId() {
-            return nextFreeId++;
+            return ++nextFreeId;
         }
 
 

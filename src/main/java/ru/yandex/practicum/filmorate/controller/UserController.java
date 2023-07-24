@@ -1,11 +1,11 @@
-package controller;
+package ru.yandex.practicum.filmorate.controller;
 
 
-import exceptions.UserException;
-import exceptions.ValidationException;
 import lombok.extern.slf4j.Slf4j;
-import model.User;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exceptions.UserException;
+import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.model.User;
 
 import javax.validation.Valid;
 import java.util.ArrayList;
@@ -15,29 +15,24 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/users")
+@RequestMapping(value = "/users", produces = "application/json")
 public class UserController {
     private final UserIdGenerator userIdGenerator;
-    //private static final Logger log = LoggerFactory.getLogger(UserController.class);
+
     final Map<Integer, User> users = new HashMap<>();
 
     public UserController() {
         this.userIdGenerator = new UserIdGenerator();
     }
 
-    @PostMapping(value = "/user")
+    @PostMapping
     public User createUser(@Valid @RequestBody User user) {
         isValid(user);
         int id = userIdGenerator.getNextFreeId();
         user.setId(id);
-        users.put(id, user);
+        users.put(user.getId(), user);
         log.info("Добавлен новый пользователь.");
         return user;
-    }
-
-    @GetMapping
-    public List<User> getAllUsers() {
-        return new ArrayList<>(users.values());
     }
 
     @PutMapping
@@ -53,10 +48,15 @@ public class UserController {
         return user;
     }
 
+    @GetMapping
+    public List<User> getAllUsers() {
+        return new ArrayList<>(users.values());
+    }
 
     private void isValid(User user) throws ValidationException {
         if (user.getName() == null) {
             user.setName(user.getLogin());
+
         }
     }
 
@@ -65,7 +65,7 @@ public class UserController {
 
 
         public int getNextFreeId() {
-            return nextFreeId++;
+            return ++nextFreeId;
         }
     }
 }
