@@ -1,6 +1,7 @@
 package controller;
 
 
+import exceptions.UserException;
 import exceptions.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import model.User;
@@ -41,11 +42,14 @@ public class UserController {
 
     @PutMapping
     public User updateUser(@Valid @RequestBody User user) {
-        if (!users.containsKey(user.getId())) {
-            throw new IllegalArgumentException("Пользователь с id " + user.getId() + " не найден");
+        if (users.get(user.getId()) != null) {
+            isValid(user);
+            users.put(user.getId(), user);
+            log.info("Запрос на изменение пользователя. Пользователь изменен.");
+        } else {
+            log.error("Запрос на изменение пользователя. Пользователь не найден.");
+            throw new UserException("Пользователь не найден.");
         }
-        isValid(user);
-        users.put(user.getId(), user);
         return user;
     }
 

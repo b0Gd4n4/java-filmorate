@@ -1,5 +1,6 @@
 package controller;
 
+import exceptions.FilmException;
 import exceptions.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import model.Film;
@@ -38,12 +39,16 @@ public class FilmController {
 
     @PutMapping
     public Film updateFilm(@Valid @RequestBody Film film) {
-        if (!films.containsKey(film.getId())) {
-            throw new IllegalArgumentException("Фильм с id " + film.getId() + " не найден");
+            if (films.get(film.getId()) != null) {
+                isValid(film);
+                films.put(film.getId(), film);
+                log.info("Запрос на изменение фильма. Фильм изменён.");
+            } else {
+                log.error("Запрос на изменение фильма. Фильм не найден.");
+                throw new FilmException("Фильм не найден.");
+            }
+            return film;
         }
-        films.put(film.getId(), film);
-        return film;
-    }
 
 
     @GetMapping
