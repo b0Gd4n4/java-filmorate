@@ -2,18 +2,16 @@ package ru.yandex.practicum.filmorate.model;
 
 import lombok.Builder;
 import lombok.Data;
+import ru.yandex.practicum.filmorate.marker.Marker;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Past;
-import javax.validation.constraints.Positive;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.*;
 import java.time.LocalDate;
 
 @Data
 @Builder
 public class Film {
-
-    private int id;
+    @NotNull(groups = {Marker.Update.class})
+    private Long id;
     @NotBlank
     private String name;
     @Size(max = 200)

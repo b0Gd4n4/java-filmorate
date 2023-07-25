@@ -1,9 +1,11 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exceptions.FilmException;
+import ru.yandex.practicum.filmorate.exceptions.DataNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.marker.Marker;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import javax.validation.Valid;
@@ -21,7 +23,7 @@ public class FilmController {
     private final FilmIdGenerator filmIdGenerator;
 
 
-    final Map<Integer, Film> films = new HashMap<>();
+    final Map<Long, Film> films = new HashMap<>();
 
     public FilmController() {
         this.filmIdGenerator = new FilmIdGenerator();
@@ -29,23 +31,24 @@ public class FilmController {
 
     @PostMapping
     public Film createFilm(@Valid @RequestBody Film film) {
-        isValid(film);
-        int id = filmIdGenerator.getNextFreeId();
+        validate(film);
+        long id = filmIdGenerator.getNextFreeId();
         film.setId(id);
-        films.put(id, film);
+        films.put(film.getId(), film);
         log.info("Добавлен новый фильм");
         return film;
     }
 
     @PutMapping
+    @Validated({Marker.Update.class})
     public Film updateFilm(@Valid @RequestBody Film film) {
         if (films.get(film.getId()) != null) {
-            isValid(film);
+            validate(film);
             films.put(film.getId(), film);
             log.info("Запрос на изменение фильма. Фильм изменён.");
         } else {
             log.error("Запрос на изменение фильма. Фильм не найден.");
-            throw new FilmException("Фильм не найден.");
+            throw new DataNotFoundException("Фильм не найден.");
         }
         return film;
     }
@@ -56,7 +59,7 @@ public class FilmController {
         return new ArrayList<>(films.values());
     }
 
-    private void isValid(Film film) throws ValidationException {
+    private void validate(Film film) throws ValidationException {
         if (film.getReleaseDate().isBefore(LocalDate.parse("1895-12-28"))) {
             throw new ValidationException("Дата указана неккоректно.");
         }

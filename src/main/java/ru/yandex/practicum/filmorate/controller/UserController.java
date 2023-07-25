@@ -2,9 +2,11 @@ package ru.yandex.practicum.filmorate.controller;
 
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exceptions.UserException;
+import ru.yandex.practicum.filmorate.exceptions.DataNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.marker.Marker;
 import ru.yandex.practicum.filmorate.model.User;
 
 import javax.validation.Valid;
@@ -19,7 +21,7 @@ import java.util.Map;
 public class UserController {
     private final UserIdGenerator userIdGenerator;
 
-    final Map<Integer, User> users = new HashMap<>();
+    final Map<Long, User> users = new HashMap<>();
 
     public UserController() {
         this.userIdGenerator = new UserIdGenerator();
@@ -27,8 +29,8 @@ public class UserController {
 
     @PostMapping
     public User createUser(@Valid @RequestBody User user) {
-        isValid(user);
-        int id = userIdGenerator.getNextFreeId();
+        validate(user);
+        long id = userIdGenerator.getNextFreeId();
         user.setId(id);
         users.put(user.getId(), user);
         log.info("Добавлен новый пользователь.");
@@ -36,14 +38,15 @@ public class UserController {
     }
 
     @PutMapping
+    @Validated({Marker.Update.class})
     public User updateUser(@Valid @RequestBody User user) {
         if (users.get(user.getId()) != null) {
-            isValid(user);
+            validate(user);
             users.put(user.getId(), user);
             log.info("Запрос на изменение пользователя. Пользователь изменен.");
         } else {
             log.error("Запрос на изменение пользователя. Пользователь не найден.");
-            throw new UserException("Пользователь не найден.");
+            throw new DataNotFoundException("Пользователь не найден.");
         }
         return user;
     }
@@ -53,7 +56,7 @@ public class UserController {
         return new ArrayList<>(users.values());
     }
 
-    private void isValid(User user) throws ValidationException {
+    private void validate(User user) throws ValidationException {
         if (user.getName() == null) {
             user.setName(user.getLogin());
 
