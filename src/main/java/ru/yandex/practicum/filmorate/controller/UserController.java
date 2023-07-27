@@ -1,7 +1,9 @@
 package ru.yandex.practicum.filmorate.controller;
 
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exceptions.DataNotFoundException;
@@ -18,14 +20,13 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping(value = "/users", produces = "application/json")
+@RequiredArgsConstructor
 public class UserController {
+
     private final UserIdGenerator userIdGenerator;
 
     final Map<Long, User> users = new HashMap<>();
 
-    public UserController() {
-        this.userIdGenerator = new UserIdGenerator();
-    }
 
     @PostMapping
     public User createUser(@Valid @RequestBody User user) {
@@ -38,16 +39,15 @@ public class UserController {
     }
 
     @PutMapping
-    @Validated({Marker.Update.class})
-    public User updateUser(@Valid @RequestBody User user) {
-        if (users.get(user.getId()) != null) {
+    public User updateUser(@Validated({Marker.Update.class}) @RequestBody User user) {
+        if (!users.containsKey(user.getId())) {
+            throw new DataNotFoundException("Ключ не найден: " + user.getId());
+        } else {
             validate(user);
             users.put(user.getId(), user);
-            log.info("Запрос на изменение пользователя. Пользователь изменен.");
-        } else {
-            log.error("Запрос на изменение пользователя. Пользователь не найден.");
-            throw new DataNotFoundException("Пользователь не найден.");
+            log.info("Запрос на изменение фильма. Фильм изменён.");
         }
+
         return user;
     }
 
@@ -63,12 +63,14 @@ public class UserController {
         }
     }
 
+    @Component
     public static final class UserIdGenerator {
-        private int nextFreeId = 0;
+        private long nextFreeId = 0;
 
 
-        public int getNextFreeId() {
+        public Long getNextFreeId() {
             return ++nextFreeId;
         }
     }
+
 }

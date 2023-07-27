@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exceptions.DataNotFoundException;
@@ -18,16 +20,13 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping(value = "/films", produces = "application/json")
-
+@RequiredArgsConstructor
 public class FilmController {
-    private final FilmIdGenerator filmIdGenerator;
 
+    private final FilmIdGenerator filmIdGenerator;
 
     final Map<Long, Film> films = new HashMap<>();
 
-    public FilmController() {
-        this.filmIdGenerator = new FilmIdGenerator();
-    }
 
     @PostMapping
     public Film createFilm(@Valid @RequestBody Film film) {
@@ -40,16 +39,16 @@ public class FilmController {
     }
 
     @PutMapping
-    @Validated({Marker.Update.class})
-    public Film updateFilm(@Valid @RequestBody Film film) {
-        if (films.get(film.getId()) != null) {
+    public Film updateFilm(@Validated({Marker.Update.class}) @RequestBody Film film) {
+
+        if (!films.containsKey(film.getId())) {
+            throw new DataNotFoundException("Ключ не найден: " + film.getId());
+        } else {
             validate(film);
             films.put(film.getId(), film);
             log.info("Запрос на изменение фильма. Фильм изменён.");
-        } else {
-            log.error("Запрос на изменение фильма. Фильм не найден.");
-            throw new DataNotFoundException("Фильм не найден.");
         }
+
         return film;
     }
 
@@ -65,14 +64,16 @@ public class FilmController {
         }
     }
 
+    @Component
     public static final class FilmIdGenerator {
-        private int nextFreeId = 0;
+        private long nextFreeId = 0;
 
 
-        public int getNextFreeId() {
+        public Long getNextFreeId() {
             return ++nextFreeId;
         }
 
 
     }
+
 }
