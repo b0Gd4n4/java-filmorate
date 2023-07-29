@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exceptions.DataNotFoundException;
@@ -23,15 +22,19 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserIdGenerator userIdGenerator;
+    private final Map<Long, User> users = new HashMap<>();
 
-    final Map<Long, User> users = new HashMap<>();
+    private long nextId = 0;
 
+
+    public Long getNextFreeId() {
+        return ++nextId;
+    }
 
     @PostMapping
     public User createUser(@Valid @RequestBody User user) {
         validate(user);
-        long id = userIdGenerator.getNextFreeId();
+        long id = getNextFreeId();
         user.setId(id);
         users.put(user.getId(), user);
         log.info("Добавлен новый пользователь.");
@@ -63,14 +66,5 @@ public class UserController {
         }
     }
 
-    @Component
-    public static final class UserIdGenerator {
-        private long nextFreeId = 0;
-
-
-        public Long getNextFreeId() {
-            return ++nextFreeId;
-        }
-    }
 
 }

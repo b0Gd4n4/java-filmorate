@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exceptions.DataNotFoundException;
@@ -23,15 +22,19 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FilmController {
 
-    private final FilmIdGenerator filmIdGenerator;
+    private final Map<Long, Film> films = new HashMap<>();
 
-    final Map<Long, Film> films = new HashMap<>();
+    private long nextId = 0;
 
+
+    public Long getNextFreeId() {
+        return ++nextId;
+    }
 
     @PostMapping
     public Film createFilm(@Valid @RequestBody Film film) {
         validate(film);
-        long id = filmIdGenerator.getNextFreeId();
+        long id = getNextFreeId();
         film.setId(id);
         films.put(film.getId(), film);
         log.info("Добавлен новый фильм");
@@ -64,16 +67,5 @@ public class FilmController {
         }
     }
 
-    @Component
-    public static final class FilmIdGenerator {
-        private long nextFreeId = 0;
-
-
-        public Long getNextFreeId() {
-            return ++nextFreeId;
-        }
-
-
-    }
 
 }
