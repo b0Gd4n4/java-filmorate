@@ -21,7 +21,7 @@ public class FilmService {
     private final FilmStorage filmStorage;
 
 
-    private final static int TOP = 10;
+    private final int TOP = 10;
 
 
     public Film createFilm(Film film) {
