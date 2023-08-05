@@ -64,7 +64,7 @@ public class UserControllerTest {
                                         "}")
                                 .contentType(MediaType.APPLICATION_JSON)
                 ).andExpect(status().isOk())
-                .andExpect(content().string(containsString("\"name\":\"dsdfsdfsd\"")));
+                .andExpect(content().string(containsString("\"name\":\"nfdofdof\"")));
     }
 
     @Test
