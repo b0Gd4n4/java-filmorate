@@ -18,8 +18,6 @@ public class ErrorHandler {
         );
     }
 
-
-
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Error handleValidationException(final ValidationException e) {
@@ -44,6 +42,7 @@ public class ErrorHandler {
         public Error(String error) {
             this.error = error;
         }
+
         public String getError() {
             return error;
         }
