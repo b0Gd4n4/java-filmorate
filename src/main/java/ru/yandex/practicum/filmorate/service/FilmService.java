@@ -21,7 +21,7 @@ public class FilmService {
     private final FilmStorage filmStorage;
 
 
-    private final int TOP_FILMS = 10;
+    private final int topFilms = 10;
 
 
     public Film createFilm(Film film) {
@@ -64,7 +64,7 @@ public class FilmService {
 
     public List<Film> getTopFilms(Integer count) {
         if (count == null) {
-            count = TOP_FILMS;
+            count = topFilms;
         }
         List<Film> films = filmStorage.getAllFilms();
         films.sort(Comparator.comparingInt(Film::numberOfLikes).reversed());
