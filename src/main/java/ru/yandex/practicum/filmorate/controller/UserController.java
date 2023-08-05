@@ -1,69 +1,73 @@
 package ru.yandex.practicum.filmorate.controller;
 
 
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exceptions.DataNotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.marker.Marker;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
-@RequestMapping(value = "/users", produces = "application/json")
-@RequiredArgsConstructor
+@RequestMapping
+@AllArgsConstructor
 public class UserController {
 
-    private final Map<Long, User> users = new HashMap<>();
-
-    private long nextId = 0;
+    private final UserService userService;
 
 
-    public Long getNextFreeId() {
-        return ++nextId;
-    }
-
-    @PostMapping
+    @PostMapping(value = "/users")
     public User createUser(@Valid @RequestBody User user) {
-        validate(user);
-        long id = getNextFreeId();
-        user.setId(id);
-        users.put(user.getId(), user);
         log.info("Добавлен новый пользователь.");
-        return user;
+        return userService.createUser(user);
     }
 
-    @PutMapping
+    @PutMapping(value = "/users")
     public User updateUser(@Validated({Marker.Update.class}) @RequestBody User user) {
-        if (!users.containsKey(user.getId())) {
-            throw new DataNotFoundException("Ключ не найден: " + user.getId());
-        } else {
-            validate(user);
-            users.put(user.getId(), user);
-            log.info("Запрос на изменение фильма. Фильм изменён.");
-        }
-
-        return user;
+        log.info("Запрос на изменение фильма. Фильм изменён.");
+        return userService.updateUser(user);
     }
 
-    @GetMapping
+
+    @GetMapping(value = "/users")
     public List<User> getAllUsers() {
-        return new ArrayList<>(users.values());
+        return userService.getUsers();
     }
 
-    private void validate(User user) throws ValidationException {
-        if (user.getName() == null) {
-            user.setName(user.getLogin());
 
-        }
+    @GetMapping("/users/{id}")
+    public User findUserById(@PathVariable Long id) {
+        log.info("Request user by id = {}", id);
+        return userService.findUserById(id);
+    }
+
+
+    @PutMapping(value = "/users/{id}/friends/{friendId}")
+    public void addFriends(@PathVariable Long id, @PathVariable Long friendId) {
+        userService.addFriends(id, friendId);
+    }
+
+    @DeleteMapping(value = "/users/{id}/friends/{friendId}")
+    public void removeFriends(@PathVariable Long id, @PathVariable Long friendId) {
+        userService.removeFriends(id, friendId);
+    }
+
+    @GetMapping(value = "/users/{id}/friends")
+    public List<User> getFriends(@PathVariable Long id) {
+        return userService.getAllFriends(id);
+    }
+
+    @GetMapping(value = "/users/{id}/friends/common/{otherId}")
+    public List<User> getCommonFriends(@PathVariable Long id, @PathVariable Long otherId) {
+        List<User> first = userService.getAllFriends(id);
+        List<User> second = userService.getAllFriends(otherId);
+        return first.stream().filter(second::contains).collect(Collectors.toList());
     }
 
 
