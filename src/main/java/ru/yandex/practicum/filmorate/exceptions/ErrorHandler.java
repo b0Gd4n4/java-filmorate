@@ -36,6 +36,13 @@ public class ErrorHandler {
         );
     }
 
+    @ExceptionHandler(Throwable.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public Error handleThrowable(final Throwable e) {
+        log.error(e.getMessage());
+        return new Error(e.getMessage());
+    }
+
     public class Error {
         private final String error;
 

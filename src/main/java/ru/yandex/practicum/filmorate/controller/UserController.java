@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestController
 @RequestMapping
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
@@ -37,13 +37,14 @@ public class UserController {
 
     @GetMapping(value = "/users")
     public List<User> getAllUsers() {
+        log.info("Запрос на получение всех пользователей.");
         return userService.getUsers();
     }
 
 
     @GetMapping("/users/{id}")
     public User findUserById(@PathVariable Long id) {
-        log.info("Request user by id = {}", id);
+        log.info("Запрос на получения пользователя = {} по id", id);
         return userService.findUserById(id);
     }
 
@@ -51,15 +52,18 @@ public class UserController {
     @PutMapping(value = "/users/{id}/friends/{friendId}")
     public void addFriends(@PathVariable Long id, @PathVariable Long friendId) {
         userService.addFriends(id, friendId);
+        log.info("Пользователи {} и {} теперь друзья", id, friendId);
     }
 
     @DeleteMapping(value = "/users/{id}/friends/{friendId}")
     public void removeFriends(@PathVariable Long id, @PathVariable Long friendId) {
         userService.removeFriends(id, friendId);
+        log.info("Пользователи {} и {} больше не являются друзьями.", id, friendId);
     }
 
     @GetMapping(value = "/users/{id}/friends")
     public List<User> getFriends(@PathVariable Long id) {
+        log.info("Запрос на получение всех пользователей.");
         return userService.getAllFriends(id);
     }
 
@@ -67,6 +71,7 @@ public class UserController {
     public List<User> getCommonFriends(@PathVariable Long id, @PathVariable Long otherId) {
         List<User> first = userService.getAllFriends(id);
         List<User> second = userService.getAllFriends(otherId);
+        log.info("Общие друзья пользователя {} и {}", id, otherId);
         return first.stream().filter(second::contains).collect(Collectors.toList());
     }
 

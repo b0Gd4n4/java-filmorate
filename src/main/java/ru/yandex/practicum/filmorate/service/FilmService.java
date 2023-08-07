@@ -21,9 +21,6 @@ public class FilmService {
     private final FilmStorage filmStorage;
 
 
-    private final int topFilms = 10;
-
-
     public Film createFilm(Film film) {
         validate(film);
         return filmStorage.createFilm(film);
@@ -63,9 +60,6 @@ public class FilmService {
     }
 
     public List<Film> getTopFilms(Integer count) {
-        if (count == null) {
-            count = topFilms;
-        }
         List<Film> films = filmStorage.getAllFilms();
         films.sort(Comparator.comparingInt(Film::numberOfLikes).reversed());
         return films.stream().limit(count).collect(Collectors.toList());

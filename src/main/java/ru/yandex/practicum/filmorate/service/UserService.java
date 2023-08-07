@@ -7,9 +7,8 @@ import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -56,17 +55,13 @@ public class UserService {
     }
 
     public List<User> getAllFriends(Long id) {
-        List<User> friends = new ArrayList<>();
-        Set<Long> friendsIds = userStorage.getUserById(id).getFriends();
-        if (friendsIds == null) {
-            return friends;
-        }
-        for (Long friendId : friendsIds) {
-            User friend = userStorage.getUserById(friendId);
-            friends.add(friend);
-        }
-        return friends;
+        return userStorage.getUserById(id)
+                .getFriends()
+                .stream()
+                .map(userStorage::getUserById)
+                .collect(Collectors.toList());
     }
+
 
     public void validate(User user) throws ValidationException {
         if (user.getName() == null || user.getName().isBlank()) {
