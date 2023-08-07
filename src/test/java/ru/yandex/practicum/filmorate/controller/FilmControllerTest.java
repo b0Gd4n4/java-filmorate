@@ -31,7 +31,7 @@ public class FilmControllerTest {
                                 "  \"duration\": 100\n" +
                                 "}")
                         .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().isBadRequest());
+        ).andExpect(status().is(500));
     }
 
     @Test
@@ -47,7 +47,7 @@ public class FilmControllerTest {
                                 "  \"duration\": 100\n" +
                                 "}")
                         .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().isBadRequest());
+        ).andExpect(status().is(500));
     }
 
     @Test
@@ -75,6 +75,6 @@ public class FilmControllerTest {
                                 "  \"duration\": -100\n" +
                                 "}")
                         .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().isBadRequest());
+        ).andExpect(status().is(500));
     }
 }

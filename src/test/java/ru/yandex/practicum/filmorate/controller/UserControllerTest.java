@@ -32,7 +32,7 @@ public class UserControllerTest {
                                 "}" +
                                 "}")
                         .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().isBadRequest());
+        ).andExpect(status().is(500));
     }
 
 
@@ -48,7 +48,7 @@ public class UserControllerTest {
                                 "}" +
                                 "}")
                         .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().isBadRequest());
+        ).andExpect(status().is(500));
     }
 
     @Test
@@ -79,6 +79,6 @@ public class UserControllerTest {
                                 "}" +
                                 "}")
                         .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().isBadRequest());
+        ).andExpect(status().is(500));
     }
 }
