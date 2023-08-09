@@ -43,26 +43,25 @@ public class FilmService {
     public Film addLike(Long id, Long userId) {
         Film film = filmStorage.getFilmById(id);
         film.addLike(userId);
-        filmStorage.updateFilm(film);
         log.info("Фильм с id={} лайкнул пользователь {}.", film.getId(), userId);
         return film;
     }
 
-    public Film removeLike(Long id, Long userId) throws DataNotFoundException {
+    public Film removeLike(Long id, Long userId) {
         Film film = filmStorage.getFilmById(id);
         boolean result = film.removeLike(userId);
         if (!result) {
             throw new DataNotFoundException("Лайк пользователя " + userId + " не найден");
         }
-        filmStorage.updateFilm(film);
         log.info("Пользователь удалил лайк с фильма.");
         return film;
     }
 
     public List<Film> getTopFilms(Integer count) {
-        List<Film> films = filmStorage.getAllFilms();
-        films.sort(Comparator.comparingInt(Film::numberOfLikes).reversed());
-        return films.stream().limit(count).collect(Collectors.toList());
+        return filmStorage.getAllFilms().stream()
+                .sorted(Comparator.comparingInt(Film::numberOfLikes).reversed())
+                .limit(count)
+                .collect(Collectors.toList());
     }
 
     public void validate(Film film) throws ValidationException {

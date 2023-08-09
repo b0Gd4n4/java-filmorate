@@ -11,7 +11,6 @@ import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -69,10 +68,8 @@ public class UserController {
 
     @GetMapping(value = "/users/{id}/friends/common/{otherId}")
     public List<User> getCommonFriends(@PathVariable Long id, @PathVariable Long otherId) {
-        List<User> first = userService.getAllFriends(id);
-        List<User> second = userService.getAllFriends(otherId);
-        log.info("Общие друзья пользователя {} и {}", id, otherId);
-        return first.stream().filter(second::contains).collect(Collectors.toList());
+        log.info("Получения общих друзей пользователя {} и {}", id, otherId);
+        return userService.getCommonFriends(id, otherId);
     }
 
 
