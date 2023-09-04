@@ -3,74 +3,76 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.validation.annotation.Validated;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.marker.Marker;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @RestController
-@RequestMapping
+@RequestMapping("/users")
 @RequiredArgsConstructor
 public class UserController {
-
+    private final UserDbStorage userStorage;
     private final UserService userService;
 
-
-    @PostMapping(value = "/users")
-    public User createUser(@Valid @RequestBody User user) {
-        log.info("Добавлен новый пользователь.");
-        return userService.createUser(user);
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public User createUser(@RequestBody @Valid User user) {
+        log.info("Received POST request: new user");
+        return userStorage.addUser(user);
     }
 
-    @PutMapping(value = "/users")
-    public User updateUser(@Validated({Marker.Update.class}) @RequestBody User user) {
-        log.info("Запрос на изменение фильма. Фильм изменён.");
-        return userService.updateUser(user);
+    @PutMapping
+    public User updateUser(@RequestBody @Valid User user) {
+        log.info("Received PUT request: update user {}", user.getId());
+        return userStorage.updateUser(Math.toIntExact(user.getId()), user);
     }
 
-
-    @GetMapping(value = "/users")
-    public List<User> getAllUsers() {
-        log.info("Запрос на получение всех пользователей.");
-        return userService.getUsers();
+    @GetMapping
+    public Set<User> findAllUsers() {
+        log.info("Received GET request: all users");
+        return userStorage.getAllUsers();
     }
 
-
-    @GetMapping("/users/{id}")
-    public User findUserById(@PathVariable Long id) {
-        log.info("Запрос на получения пользователя = {} по id", id);
-        return userService.findUserById(id);
+    @GetMapping("/{id}")
+    public User getUserById(@PathVariable("id") Integer id) {
+        log.info("Received GET request: user {}", id);
+        return userStorage.getUserById(id);
     }
 
-
-    @PutMapping(value = "/users/{id}/friends/{friendId}")
-    public void addFriends(@PathVariable Long id, @PathVariable Long friendId) {
-        userService.addFriends(id, friendId);
-        log.info("Пользователи {} и {} теперь друзья", id, friendId);
+    @PutMapping("/{id}/friends/{friendId}")
+    public User addFriend(@PathVariable Integer id, @PathVariable Integer friendId) {
+        log.info("Received PUT request: add new friend {} to user {}", friendId, id);
+        return userService.addFriend(id, friendId);
     }
 
-    @DeleteMapping(value = "/users/{id}/friends/{friendId}")
-    public void removeFriends(@PathVariable Long id, @PathVariable Long friendId) {
-        userService.removeFriends(id, friendId);
-        log.info("Пользователи {} и {} больше не являются друзьями.", id, friendId);
+    @PutMapping("/{id}/friends-accept/{friendId}")
+    public User acceptFriend(@PathVariable Integer id, @PathVariable Integer friendId) {
+        log.info("Received PUT request: accept friend request from user {}", friendId);
+        return userService.acceptFriends(id, friendId);
     }
 
-    @GetMapping(value = "/users/{id}/friends")
-    public List<User> getFriends(@PathVariable Long id) {
-        log.info("Запрос на получение всех пользователей.");
-        return userService.getAllFriends(id);
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public User removeFriend(@PathVariable Integer id, @PathVariable Integer friendId) {
+        log.info("Received DELETE request: delete friend {} form user {}", friendId, id);
+        return userService.removeFriend(id, friendId);
     }
 
-    @GetMapping(value = "/users/{id}/friends/common/{otherId}")
-    public List<User> getCommonFriends(@PathVariable Long id, @PathVariable Long otherId) {
-        log.info("Получения общих друзей пользователя {} и {}", id, otherId);
+    @GetMapping("/{id}/friends")
+    public List<User> getFriends(@PathVariable Integer id) {
+        log.info("Received GET request: get all friends of user {}", id);
+        return userService.getFriendsById(id);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public Set<User> getMutualFriends(@PathVariable Integer id, @PathVariable Integer otherId) {
+        log.info("Received GET request: common friends of users {} and {}", id, otherId);
         return userService.getCommonFriends(id, otherId);
     }
-
-
 }

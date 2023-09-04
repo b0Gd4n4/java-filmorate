@@ -1,74 +1,130 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exceptions.DataNotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
-import java.time.LocalDate;
-import java.util.Comparator;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
+import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exceptions.AlreadyExistException;
+import ru.yandex.practicum.filmorate.exceptions.DoNotExistException;
+import ru.yandex.practicum.filmorate.marker.mapper.FilmMapper;
+import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
+import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Service
+import static ru.yandex.practicum.filmorate.storage.Constants.STATUS_ACTIVE;
+import static ru.yandex.practicum.filmorate.storage.Constants.STATUS_DELETED;
+
 @Slf4j
-@RequiredArgsConstructor
+@Service
 public class FilmService {
+    private final FilmDbStorage filmStorage;
+    private final UserDbStorage userStorage;
+    private final GenreDbStorage genreDbStorage;
+    private final JdbcTemplate jdbcTemplate;
 
-    private final FilmStorage filmStorage;
-
-
-    public Film createFilm(Film film) {
-        validate(film);
-        return filmStorage.createFilm(film);
+    public FilmService(FilmDbStorage filmStorage, UserDbStorage userStorage, GenreDbStorage genreDbStorage, JdbcTemplate jdbcTemplate) {
+        this.filmStorage = filmStorage;
+        this.userStorage = userStorage;
+        this.genreDbStorage = genreDbStorage;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
-    public Film updateFilm(Film film) {
-        validate(film);
-        return filmStorage.updateFilm(film);
-    }
-
-    public List<Film> getAllFilms() {
-        return filmStorage.getAllFilms();
-    }
-
-    public Film findFilmById(Long id) {
-        return filmStorage.getFilmById(id);
-    }
-
-
-    public Film addLike(Long id, Long userId) {
+    public Film addLike(Integer id, Integer userId) {
         Film film = filmStorage.getFilmById(id);
-        film.addLike(userId);
-        log.info("Фильм с id={} лайкнул пользователь {}.", film.getId(), userId);
-        return film;
-    }
-
-    public Film removeLike(Long id, Long userId) {
-        Film film = filmStorage.getFilmById(id);
-        boolean result = film.removeLike(userId);
-        if (!result) {
-            throw new DataNotFoundException("Лайк пользователя " + userId + " не найден");
+        userStorage.getUserById(userId);
+        SqlRowSet resultSet = jdbcTemplate.queryForRowSet(
+                "SELECT * FROM likes " +
+                        "WHERE (film_id = ? AND user_id = ?) " +
+                        "AND (status_id = ?)",
+                id,
+                userId,
+                STATUS_ACTIVE
+        );
+        if (resultSet.next()) {
+            throw new AlreadyExistException(String.format(
+                    "Like from user id %s to film %s already exist",
+                    userId,
+                    id
+            ));
+        } else {
+            String sqlQuery = "INSERT INTO likes (film_id, user_id, status_id) " +
+                    "VALUES (?, ?, ?)";
+            jdbcTemplate.update(sqlQuery,
+                    id,
+                    userId,
+                    STATUS_ACTIVE
+            );
+            log.info("Add like request from user {} to film {} with status {}", userId, id, STATUS_ACTIVE);
+            film.setRate(film.getRate() + 1);
+            filmStorage.updateFilm(Math.toIntExact(film.getId()), film);
+            log.info("Film {} rate updated", id);
+            return film;
         }
-        log.info("Пользователь удалил лайк с фильма.");
-        return film;
     }
 
-    public List<Film> getTopFilms(Integer count) {
-        return filmStorage.getAllFilms().stream()
-                .sorted(Comparator.comparingInt(Film::numberOfLikes).reversed())
-                .limit(count)
+    public Film deleteLike(Integer id, Integer userId) {
+        Film film = filmStorage.getFilmById(id);
+        userStorage.getUserById(userId);
+        SqlRowSet resultSet = jdbcTemplate.queryForRowSet(
+                "SELECT * FROM likes " +
+                        "WHERE (film_id = ? AND user_id = ?) " +
+                        "AND (status_id = ?)",
+                id,
+                userId,
+                STATUS_ACTIVE
+        );
+        if (resultSet.next()) {
+            String sqlQuery = "UPDATE likes SET " +
+                    "status_id = ?" +
+                    "WHERE film_id = ? AND user_id = ?";
+            jdbcTemplate.update(sqlQuery,
+                    STATUS_DELETED,
+                    id,
+                    userId
+            );
+            log.info("Delete like from user {} to film {} with status {}", userId, id, STATUS_DELETED);
+            if (film.getRate() == 0) {
+                log.info("Film {} rate updated", id);
+                return film;
+            } else {
+                film.setRate(film.getRate() - 1);
+                filmStorage.updateFilm(Math.toIntExact(film.getId()), film);
+            }
+            log.info("Film {} rate updated", id);
+            return film;
+        } else {
+            throw new DoNotExistException(String.format(
+                    "Like from user id %s to film %s do not exist",
+                    userId,
+                    id
+            ));
+        }
+    }
+
+
+    public List<Film> getTopFilms(long count) {
+        List<Film> filmsList = jdbcTemplate.query("SELECT f.ID, f.name, description, release_date, duration, rate, deleted, " +
+                        "fm.MPA_ID, m.NAME as mpa_name FROM films f " +
+                        "LEFT JOIN (SELECT * FROM FILM_MPA WHERE status_id = 2) fm ON f.ID = fm.FILM_ID " +
+                        "LEFT JOIN MPA m ON m.ID = fm.MPA_ID " +
+                        "ORDER BY rate DESC " +
+                        "LIMIT " + count,
+                new FilmMapper()
+        );
+        if (filmsList.isEmpty()) {
+            log.info("No films found in database");
+            return filmsList;
+        }
+        log.info("Total films found in database: " + filmsList.size());
+        filmsList.forEach(film -> film.setGenres(genreDbStorage.getGenresOfFilm(Math.toIntExact(film.getId()))));
+        return filmsList.stream()
+                .sorted(Film::getFilmIdToCompare)
                 .collect(Collectors.toList());
     }
-
-    public void validate(Film film) throws ValidationException {
-        if (film.getReleaseDate().isBefore(LocalDate.parse("1895-12-28"))) {
-            throw new ValidationException("Дата указана неккоректно.");
-        }
-    }
-
-
 }
+

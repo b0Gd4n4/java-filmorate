@@ -2,21 +2,30 @@ package ru.yandex.practicum.filmorate.storage.film;
 
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.util.List;
+import java.sql.SQLException;
+import java.util.Set;
 
 public interface FilmStorage {
-
-    Long getNextFreeId();
-
-    Film createFilm(Film film);
-
-    Film updateFilm(Film film);
-
-    List<Film> getAllFilms();
-
-    Film getFilmById(Long id);
+    Film addFilm(Film film);
 
 
+    Film updateFilm(Integer id, Film film);
 
 
+    Film getFilmById(Integer id) throws SQLException;
+
+
+    Set<Film> getAllFilms() throws SQLException;
+
+
+    void addGenreById(Integer genreId, Integer filmId);
+
+
+    void removeGenreById(Integer genreId, Integer filmId);
+
+    void removeAllGenres(Integer filmId);
+
+    void addMpaById(Integer mpaId, Integer filmId);
+
+    void removeMpa(Integer filmId);
 }

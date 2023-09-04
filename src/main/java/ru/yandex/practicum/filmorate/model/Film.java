@@ -1,54 +1,42 @@
 package ru.yandex.practicum.filmorate.model;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import ru.yandex.practicum.filmorate.marker.Marker;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
-import javax.validation.constraints.*;
+import javax.persistence.*;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.Size;
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.Set;
 
-
+@Data
+@Entity
 @Builder
+@Component
 @AllArgsConstructor
-@Getter
-@Setter
+@RequiredArgsConstructor
+@Table(name = "FILMS")
 public class Film {
-    @NotNull(groups = {Marker.Update.class})
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @NotBlank
     private String name;
     @Size(max = 200)
     private String description;
-    @Past
     private LocalDate releaseDate;
-    @Positive
+    @Min(1)
     private int duration;
-    private final Set<Long> likes = new HashSet<>();
+    @Min(0)
+    private Integer rate;
+    private Boolean deleted;
+    private transient Mpa mpa;
+    private transient Set<Genre> genres;
 
-    public void addLike(Long userId) {
-        likes.add(userId);
-    }
-
-    public boolean removeLike(Long userId) {
-        return likes.remove(userId);
-    }
-
-    public int numberOfLikes() {
-        return likes.size();
-    }
-
-    @Override
-    public String toString() {
-        return "Film{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", releaseDate=" + releaseDate +
-                ", duration=" + duration +
-                '}';
+    public int getFilmIdToCompare(Film film) {
+        return Math.toIntExact(film.id);
     }
 }

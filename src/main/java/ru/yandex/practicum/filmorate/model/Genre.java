@@ -1,7 +1,5 @@
 package ru.yandex.practicum.filmorate.model;
 
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,8 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.*;
-import javax.validation.constraints.Email;
-import java.time.LocalDate;
+import javax.validation.constraints.Size;
 
 @Data
 @Entity
@@ -18,20 +15,15 @@ import java.time.LocalDate;
 @Component
 @AllArgsConstructor
 @RequiredArgsConstructor
-@Table(name = "USERS")
-public class User {
+@Table(name = "GENRES")
+public class Genre {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    @Email
-    private String email;
-    private String login;
+    private Integer id;
+    @Size(max = 25)
     private String name;
-    private LocalDate birthday;
-    @JsonIgnore
-    private Boolean deleted;
 
-    public int getUserToCompare(User user) {
-        return Math.toIntExact(user.id);
+    public int getGenreIdToCompare(Genre genre) {
+        return genre.id;
     }
 }
