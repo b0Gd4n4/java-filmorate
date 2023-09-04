@@ -1,40 +1,39 @@
 package ru.yandex.practicum.filmorate.storage.mpa;
 
-
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.exceptions.DoNotExistException;
-import ru.yandex.practicum.filmorate.marker.mapper.MpaMapper;
-import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.MPA;
+import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 
+import java.util.Collection;
 import java.util.List;
 
-@Slf4j
 @Component
-@Repository
+@Primary
+@Slf4j
 public class MpaDbStorage {
+
     private final JdbcTemplate jdbcTemplate;
 
     public MpaDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public List<Mpa> getAll() {
-        return jdbcTemplate.query("SELECT DISTINCT ID AS mpa_id, NAME AS mpa_name FROM MPA",
-                new MpaMapper()
-        );
+    public Collection<MPA> getAllMpa() {
+        String sqlGetAllMpa = "SELECT * FROM mpa";
+        List<MPA> listMpa = jdbcTemplate.query(sqlGetAllMpa, FilmDbStorage::makeMpa);
+        return listMpa;
     }
 
-    public Mpa getMpaById(Integer id) {
-        List<Mpa> mpa = jdbcTemplate.query("SELECT ID AS mpa_id, NAME AS mpa_name FROM MPA WHERE ID = "
-                        + id,
-                new MpaMapper()
-        );
-        if (mpa.isEmpty()) {
-            throw new DoNotExistException("MPA with id = " + id + " do not exists");
+    public MPA getMpaById(int id) {
+        String sqlGetMpa = "SELECT * FROM mpa WHERE mpa_id = ?";
+        List<MPA> mpaById = jdbcTemplate.query(sqlGetMpa, FilmDbStorage::makeMpa, id);
+        MPA mpa = null;
+        if (!mpaById.isEmpty()) {
+            mpa = mpaById.get(0);
         }
-        return mpa.get(0);
+        return mpa;
     }
 }

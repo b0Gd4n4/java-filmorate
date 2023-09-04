@@ -1,37 +1,36 @@
 package ru.yandex.practicum.filmorate.model;
 
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import lombok.NonNull;
+import ru.yandex.practicum.filmorate.marker.Marker;
 
-import javax.persistence.*;
 import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Past;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
-@Data
-@Entity
-@Builder
-@Component
+
 @AllArgsConstructor
-@RequiredArgsConstructor
-@Table(name = "USERS")
+@Builder
+@Data
 public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @NotNull(groups = {Marker.Update.class})
     private Long id;
     @Email
-    private String email;
-    private String login;
+    private final String email;
+    @NonNull
+    @NotBlank
+    private final String login;
     private String name;
-    private LocalDate birthday;
-    @JsonIgnore
-    private Boolean deleted;
+    @Past
+    private final LocalDate birthday;
+    private Set<Integer> friends = new HashSet<>();
 
-    public int getUserToCompare(User user) {
-        return Math.toIntExact(user.id);
-    }
+
 }

@@ -1,31 +1,38 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.MPA;
 
-import java.sql.SQLException;
-import java.util.Set;
+import java.util.Collection;
+import java.util.List;
 
 public interface FilmStorage {
+
+
+    Film getFilm(int id);
+
+    Collection<Film> getAllFilms();
+
     Film addFilm(Film film);
 
+    Film updateFilm(Film film);
 
-    Film updateFilm(Integer id, Film film);
+    void makeLike(int idFilm, int idUser);
 
+    void deleteLike(int idFilm, int idUser);
 
-    Film getFilmById(Integer id) throws SQLException;
+    Collection<Film> getPopularFilms(int count);
 
+    List<Integer> getFilmLikes(Integer id);
 
-    Set<Film> getAllFilms() throws SQLException;
+    MPA checkMpa(Film film);
 
+    List<Genre> getGenres(int idFilm);
 
-    void addGenreById(Integer genreId, Integer filmId);
+    List<Genre> checkGenre(Film film);
 
+    void insertFilmGenres(Film film);
 
-    void removeGenreById(Integer genreId, Integer filmId);
-
-    void removeAllGenres(Integer filmId);
-
-    void addMpaById(Integer mpaId, Integer filmId);
-
-    void removeMpa(Integer filmId);
+    void deleteFilmGenres(Film film);
 }

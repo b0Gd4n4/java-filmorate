@@ -1,176 +1,74 @@
 package ru.yandex.practicum.filmorate.service;
 
-
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exceptions.AlreadyExistException;
-import ru.yandex.practicum.filmorate.exceptions.DoNotExistException;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
 
-import static ru.yandex.practicum.filmorate.storage.Constants.*;
+import static ru.yandex.practicum.filmorate.validator.UserValidator.validateUser;
+
 
 @Slf4j
+@RequiredArgsConstructor
 @Service
 public class UserService {
-    private final UserDbStorage userStorage;
-    private final JdbcTemplate jdbcTemplate;
 
-    @Autowired
-    public UserService(UserDbStorage userStorage, JdbcTemplate jdbcTemplate) {
-        this.userStorage = userStorage;
-        this.jdbcTemplate = jdbcTemplate;
+    private final UserStorage userStorageDb;
+
+
+    public Collection<User> getAllUsers() {
+        return userStorageDb.getAllUsers();
+    }
+
+    public User getUserById(Long id) {
+        User user = userStorageDb.getUser(id);
+        if (user == null) {
+            throw new NotFoundException("User с id " + id + " не найден.");
+        }
+        return user;
+    }
+
+    public User createUser(User user) {
+        validateUser(user);
+        return userStorageDb.createUser(user);
+    }
+
+    public User updateUser(User user) {
+        validateUser(user);
+        getUserById((long) Math.toIntExact(user.getId()));
+        return userStorageDb.updateUser(user);
+    }
+
+    public void addFriend(Long idUser, Long idFriend) {
+        getUserById(idUser);
+        getUserById(idFriend);
+        userStorageDb.addFriend(Math.toIntExact(idUser), Math.toIntExact(idFriend));
+    }
+
+    public void deleteFriend(Long idUser, Long idFriend) {
+        getUserById(idUser);
+        getUserById(idFriend);
+        userStorageDb.deleteFriend(Math.toIntExact(idUser), Math.toIntExact(idFriend));
+    }
+
+    public List<User> getFriendsById(int idUser) {
+        return userStorageDb.getFriends(idUser);
+    }
+
+    public List<User> haveCommonFriends(Long idUser, Long idFriend) {
+        List<User> friendsUser = getFriendsById(Math.toIntExact(idUser));
+        List<User> friendsFriend = getFriendsById(Math.toIntExact(idFriend));
+        friendsUser.retainAll(friendsFriend);
+        if (friendsUser.isEmpty()) {
+            log.info("Не найдено общих друзей.");
+        }
+        return friendsUser;
     }
 
 
-    public User acceptFriends(Integer id, Integer friendId) {
-        User user = userStorage.getUserById(id);
-        userStorage.getUserById(friendId);
-        SqlRowSet resultSet = jdbcTemplate.queryForRowSet("SELECT * FROM friends " +
-                        "WHERE (user_id = ? AND friend_id = ?) " +
-                        "AND (status_id = ?)",
-                friendId,
-                id,
-                STATUS_REQUEST
-        );
-        if (resultSet.next()) {
-            String sqlQuery = "UPDATE friends SET " +
-                    "status_id = ?" +
-                    " WHERE user_id = ? AND friend_id = ?";
-            jdbcTemplate.update(sqlQuery,
-                    STATUS_ACTIVE,
-                    friendId,
-                    id
-            );
-            log.info("Accept friend {} to user {} with status {}", friendId, id, 2);
-            return user;
-        } else {
-            throw new DoNotExistException(String.format(
-                    "No friend request for user %s and user %s",
-                    id,
-                    friendId
-            ));
-        }
-    }
-
-
-    public User addFriend(Integer id, Integer friendId) {
-        User user = userStorage.getUserById(id);
-        userStorage.getUserById(friendId);
-        SqlRowSet resultSet = jdbcTemplate.queryForRowSet(
-                "SELECT * FROM friends " +
-                        "WHERE (user_id = ? AND friend_id = ?) " +
-                        "AND (status_id = ?)",
-                id,
-                friendId,
-                STATUS_ACTIVE
-        );
-        if (resultSet.next()) {
-            throw new AlreadyExistException(String.format(
-                    "Friend request or from user id %s to user %s already exist, or active users are already friends",
-                    id,
-                    friendId
-            ));
-        } else {
-            String sqlQuery = "INSERT INTO friends (user_id, friend_id, status_id) VALUES (?, ?, ?)";
-            jdbcTemplate.update(sqlQuery,
-                    id,
-                    friendId,
-                    STATUS_ACTIVE
-            );
-            log.info("Added friendship of user {} with user {}", friendId, id);
-            return user;
-        }
-    }
-
-    public User removeFriend(Integer id, Integer friendId) {
-        User user = userStorage.getUserById(id);
-        userStorage.getUserById(friendId);
-        SqlRowSet resultSet = jdbcTemplate.queryForRowSet(
-                "SELECT * FROM friends " +
-                        "WHERE (user_id = ? AND friend_id = ?) " +
-                        "AND (status_id = ?)",
-                id,
-                friendId,
-                STATUS_ACTIVE
-        );
-        if (resultSet.next()) {
-            String sqlQuery1 = "UPDATE friends SET " +
-                    "status_id = ? " +
-                    "WHERE (user_id = ? AND friend_id = ?)";
-            jdbcTemplate.update(sqlQuery1,
-                    STATUS_DELETED,
-                    id,
-                    friendId
-            );
-            log.info("Removed friendship of user {} with user {}", friendId, id);
-            return user;
-        } else {
-            throw new DoNotExistException(String.format(
-                    "User with id %s not a friend to user %s",
-                    id,
-                    friendId
-            ));
-        }
-    }
-
-    public List<User> getFriendsById(Integer id) {
-        List<User> friends = new ArrayList<>();
-        Set<Integer> friendsIds = new HashSet<>();
-        SqlRowSet resultSet = jdbcTemplate.queryForRowSet("select distinct friend_id from friends where user_id = " +
-                id + " and status_id = " + STATUS_ACTIVE
-        );
-        while (resultSet.next()) {
-            friendsIds.add(resultSet.getInt("friend_id"));
-        }
-        log.info("Total friends of user {} found: {}", id, friendsIds.size());
-        friendsIds.forEach(someId -> {
-            friends.add(userStorage.getUserById(someId));
-        });
-        if (friends.isEmpty()) {
-            log.info("No friends found");
-        }
-        return friends;
-    }
-
-
-    public Set<User> getCommonFriends(Integer id, Integer otherId) {
-        Set<User> commonFriends = new HashSet<>();
-        Set<Integer> commonFriendsIds = new HashSet<>();
-        Set<Integer> friendsOfUserOne = new HashSet<>();
-        Set<Integer> friendsOfUserTwo = new HashSet<>();
-        SqlRowSet resultSetOfUserOne = jdbcTemplate.queryForRowSet(
-                "SELECT DISTINCT friend_id FROM friends WHERE user_id = " + id + " AND status_id = " + STATUS_ACTIVE
-        );
-        SqlRowSet resultSetOfUserTwo = jdbcTemplate.queryForRowSet(
-                "SELECT DISTINCT friend_id FROM friends WHERE user_id = " + otherId + " AND status_id = " + STATUS_ACTIVE
-        );
-        while (resultSetOfUserOne.next()) {
-            friendsOfUserOne.add(resultSetOfUserOne.getInt("friend_id"));
-        }
-        while (resultSetOfUserTwo.next()) {
-            friendsOfUserTwo.add(resultSetOfUserTwo.getInt("friend_id"));
-        }
-        for (Integer someId : friendsOfUserOne) {
-            if (friendsOfUserTwo.contains(someId)) {
-                commonFriendsIds.add(someId);
-            }
-        }
-        commonFriendsIds.remove(id);
-        commonFriendsIds.remove(otherId);
-        log.info("Total common friends found of users {} and {} found: {}", id, otherId, commonFriendsIds.size());
-        commonFriendsIds.forEach(someId -> {
-            commonFriends.add(userStorage.getUserById(someId));
-        });
-        if (commonFriends.isEmpty()) {
-            log.info("No common friends found of users {} and {}", id, otherId);
-            return Collections.emptySet();
-        }
-        return commonFriends;
-    }
 }

@@ -8,11 +8,11 @@ import lombok.extern.jackson.Jacksonized;
 @Data
 @Builder
 @Jacksonized
-public class Genre {
+public class MPA {
     private Integer id;
     private String name;
 
-    public Genre(Integer id, String name) {
+    public MPA(Integer id, String name) {
         this.id = id;
         this.name = name;
     }

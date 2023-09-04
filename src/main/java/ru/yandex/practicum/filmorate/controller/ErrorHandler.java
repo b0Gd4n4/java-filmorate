@@ -1,121 +1,33 @@
 package ru.yandex.practicum.filmorate.controller;
 
-/*import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import ru.yandex.practicum.filmorate.exceptions.CreationFailException;
-import ru.yandex.practicum.filmorate.exceptions.EntityNotExistException;
-import ru.yandex.practicum.filmorate.exceptions.OperationAlreadyCompletedException;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
-import ru.yandex.practicum.filmorate.model.ErrorResponse;
 
-import javax.validation.ConstraintViolationException;
+import java.util.Map;
 
 @RestControllerAdvice
-@Slf4j
 public class ErrorHandler {
 
-    @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<String> handleConstraintViolationException(ConstraintViolationException e) {
-        log.error("ConstraintViolationException: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-    }
-
-    @ExceptionHandler
+    @ExceptionHandler(ValidationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        log.error("MethodArgumentNotValidException: {}", e.getMessage());
-        return new ErrorResponse(e.getMessage());
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleCreationFailException(CreationFailException e) {
-        log.error("CreationFailException: {}", e.getMessage());
-        return new ErrorResponse(e.getMessage());
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleEntityNotExistException(final EntityNotExistException e) {
-        log.error("EntityNotExistException: {}", e.getMessage());
-        return new ErrorResponse(e.getMessage());
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleValidationException(final ValidationException e) {
-        log.error("ValidationException: {}", e.getMessage());
-        return new ErrorResponse(e.getMessage());
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleOperationAlreadyCompletedException(final OperationAlreadyCompletedException e) {
-        log.error("OperationAlreadyCompletedException: {}", e.getMessage());
-        return new ErrorResponse(e.getMessage());
+    public Map<String, HttpStatus> handleValidationException(ValidationException ex) {
+        return Map.of(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse handleThrowable(final Throwable e) {
-        log.error(e.getMessage());
-        return new ErrorResponse("Произошла непредвиденная ошибка.");
-    }
-}*/
-
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-
-import ru.yandex.practicum.filmorate.exceptions.*;
-import ru.yandex.practicum.filmorate.model.*;
-
-@RestControllerAdvice
-public class ErrorHandler {
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleFilmValidationException(final FilmValidationException e) {
-        return new ErrorResponse(
-                String.format("Error in film validation \"%s\".", e.getMessage())
-        );
+    public Map<String, HttpStatus> handleNullPointerException(final NullPointerException e) {
+        return Map.of(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler
+    @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleNotFoundException(final NotFoundException e) {
-        return new ErrorResponse(
-                String.format("Error in film validation \"%s\".", e.getMessage())
-        );
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleUserValidationException(final ValidationException e) {
-        return new ErrorResponse(
-                String.format("Error in user validation \"%s\".", e.getMessage())
-        );
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleDoNotExistException(final DoNotExistException e) {
-        return new ErrorResponse(
-                String.format("Object do not exist \"%s\".", e.getMessage())
-        );
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.IM_USED)
-    public ErrorResponse handleAlreadyExistException(final AlreadyExistException e) {
-        return new ErrorResponse(
-                String.format("Object do not exist \"%s\".", e.getMessage())
-        );
+    public Map<String, HttpStatus> handleNotFoundException(NotFoundException ex) {
+        return Map.of(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 }

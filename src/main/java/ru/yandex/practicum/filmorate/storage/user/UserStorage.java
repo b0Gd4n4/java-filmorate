@@ -2,22 +2,24 @@ package ru.yandex.practicum.filmorate.storage.user;
 
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.sql.SQLException;
-import java.util.Set;
+import java.util.Collection;
+import java.util.List;
 
 public interface UserStorage {
 
+    User getUser(Long id);
 
-    User addUser(User user);
+    Collection<User> getAllUsers();
 
+    User createUser(User user);
 
-    User updateUser(Integer id, User user);
+    User updateUser(User user);
 
+    void addFriend(int idUser, int idFriend);
 
-    User getUserById(Integer id) throws SQLException;
+    void deleteFriend(int idUser, int idFriend);
 
-
-    Set<User> getAllUsers();
+    List<User> getFriends(int idUser);
 
 
 }

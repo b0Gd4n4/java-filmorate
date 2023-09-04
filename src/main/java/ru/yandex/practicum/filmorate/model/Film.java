@@ -3,40 +3,47 @@ package ru.yandex.practicum.filmorate.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.jackson.Jacksonized;
+import ru.yandex.practicum.filmorate.marker.Marker;
 
-import javax.persistence.*;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.*;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
-@Data
-@Entity
-@Builder
-@Component
-@AllArgsConstructor
-@RequiredArgsConstructor
-@Table(name = "FILMS")
-public class Film {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    private String name;
-    @Size(max = 200)
-    private String description;
-    private LocalDate releaseDate;
-    @Min(1)
-    private int duration;
-    @Min(0)
-    private Integer rate;
-    private Boolean deleted;
-    private transient Mpa mpa;
-    private transient Set<Genre> genres;
 
-    public int getFilmIdToCompare(Film film) {
-        return Math.toIntExact(film.id);
+@Builder
+@AllArgsConstructor
+@Getter
+@Setter
+@Jacksonized
+public class Film {
+    @NotNull(groups = {Marker.Update.class})
+    private Long id;
+    @NotBlank
+    private final String name;
+    @Size(max = 200)
+    private final String description;
+    @Past
+    private final LocalDate releaseDate;
+    @Positive
+    private final Integer duration;
+    private final Integer rate;
+    private MPA mpa;
+    private List<Genre> genres;
+    private Set<Integer> likes;
+
+    public void addLike(Long userId) {
+        likes.add(Math.toIntExact(userId));
+    }
+
+    public boolean removeLike(Long userId) {
+        return likes.remove(userId);
+    }
+
+    public int numberOfLikes() {
+        return likes.size();
     }
 }
