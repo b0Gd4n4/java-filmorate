@@ -133,6 +133,7 @@ public class FilmDbStorage implements FilmStorage {
                 .sorted(Film::getFilmIdToCompare)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
     }
+
     @Override
     public void addGenreById(Integer genreId, Integer filmId) {
         SqlRowSet resultSet = jdbcTemplate.queryForRowSet("SELECT * FROM film_genre WHERE (film_id = ? AND genre_id = ?) AND status_id = ?",
