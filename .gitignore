@@ -51,3 +51,4 @@ db/* !/mvnw
      !/mvnw.cmd
      !/mvnw.cmd
      !/mvnw.cmd
+     !/filmorate.mv.db
