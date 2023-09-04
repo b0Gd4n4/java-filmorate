@@ -8,6 +8,8 @@ import ru.yandex.practicum.filmorate.marker.Marker;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 
 @Builder
@@ -25,7 +27,19 @@ public class Film {
     private LocalDate releaseDate;
     @Positive
     private int duration;
+    private final Set<Long> likes = new HashSet<>();
 
+    public void addLike(Long userId) {
+        likes.add(userId);
+    }
+
+    public boolean removeLike(Long userId) {
+        return likes.remove(userId);
+    }
+
+    public int numberOfLikes() {
+        return likes.size();
+    }
 
     @Override
     public String toString() {
