@@ -41,7 +41,7 @@ public class FilmDbStorageTest {
                 .releaseDate(LocalDate.of(2012, 1, 1))
                 .duration(90)
                 .rate(4)
-                .mpa(new MPA(4, "R")).build();
+                .mpa(new MPA(4L, "R")).build();
         filmService.addFilm(filmTest);
 
         MPA mpa = filmStorage.checkMpa(filmTest);
@@ -61,7 +61,7 @@ public class FilmDbStorageTest {
                 .releaseDate(LocalDate.of(2012, 1, 1))
                 .duration(90)
                 .rate(4)
-                .mpa(new MPA(9, "R")).build();
+                .mpa(new MPA(9L, "R")).build();
 
         NotFoundException exception = assertThrows(NotFoundException.class, () -> {
             filmService.addFilm(filmTest);
@@ -83,7 +83,7 @@ public class FilmDbStorageTest {
                 .releaseDate(LocalDate.of(2012, 1, 1))
                 .duration(90)
                 .rate(4)
-                .mpa(new MPA(4, "R"))
+                .mpa(new MPA(4L, "R"))
                 .genres(genres).build();
         filmService.addFilm(filmTest);
 
@@ -108,7 +108,7 @@ public class FilmDbStorageTest {
                 .releaseDate(LocalDate.of(2012, 1, 1))
                 .duration(90)
                 .rate(4)
-                .mpa(new MPA(4, "R"))
+                .mpa(new MPA(4L, "R"))
                 .genres(genres).build();
 
         NotFoundException exception = assertThrows(NotFoundException.class, () -> {
@@ -133,7 +133,7 @@ public class FilmDbStorageTest {
                 .releaseDate(LocalDate.of(2012, 1, 1))
                 .duration(90)
                 .rate(4)
-                .mpa(new MPA(4, "R"))
+                .mpa(new MPA(4L, "R"))
                 .genres(genres).build();
         filmStorage.addFilm(filmTest);
         filmTest.setGenres(genres);
@@ -159,7 +159,7 @@ public class FilmDbStorageTest {
                 .releaseDate(LocalDate.of(2012, 1, 1))
                 .duration(90)
                 .rate(4)
-                .mpa(new MPA(4, "R"))
+                .mpa(new MPA(4L, "R"))
                 .genres(genres).build();
         filmStorage.addFilm(filmTest);
         filmTest.setGenres(genres);

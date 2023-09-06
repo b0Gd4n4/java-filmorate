@@ -12,6 +12,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
 
@@ -26,12 +27,12 @@ public class FilmService {
     private final FilmStorage filmStorageDb;
     private final UserStorage userStorageDb;
 
-    public Film getFilmById(int id) {
+    public Film getFilmById(Long id) throws SQLException {
         Film film = filmStorageDb.getFilm(id);
         if (film == null) {
             throw new NotFoundException("film с id=" + id + "не найден");
         }
-        List<Genre> genres = filmStorageDb.getGenres(id);
+        List<Genre> genres = filmStorageDb.getGenres(Math.toIntExact(id));
         film.setGenres(genres);
         return film;
     }
@@ -51,9 +52,10 @@ public class FilmService {
         return film;
     }
 
-    public Film updateFilm(Film film) {
+    public Film updateFilm(Film film) throws SQLException {
         validateFilm(film);
-        getFilmById(Math.toIntExact(film.getId()));
+        Film film2 = getFilmById(film.getId());
+        film.setRate(film2.getRate());
         MPA mpa = filmStorageDb.checkMpa(film);
         List<Genre> genres = filmStorageDb.checkGenre(film);
         Film film1 = filmStorageDb.updateFilm(film);
@@ -63,6 +65,7 @@ public class FilmService {
         filmStorageDb.insertFilmGenres(film1);
         return film1;
     }
+
 
     public void makeLike(int idFilm, int idUser) {
         filmStorageDb.makeLike(idFilm, idUser);

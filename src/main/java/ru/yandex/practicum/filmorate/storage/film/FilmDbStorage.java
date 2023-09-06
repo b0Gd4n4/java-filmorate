@@ -30,13 +30,13 @@ public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
 
     @Override
-    public Film getFilm(int id) {
+    public Film getFilm(Long id) {
         String sql = "SELECT f.*, m.* FROM films f JOIN mpa m ON f.mpa_id = m.mpa_id WHERE f.film_id = ?";
         SqlRowSet filmRows = jdbcTemplate.queryForRowSet(sql, id);
         Film film = null;
         if (filmRows.next()) {
             MPA mpa = MPA.builder()
-                    .id(filmRows.getInt("mpa_id"))
+                    .id(filmRows.getLong("mpa_id"))
                     .name(filmRows.getString("mpa_name"))
                     .build();
             film = Film.builder()
@@ -49,8 +49,10 @@ public class FilmDbStorage implements FilmStorage {
                     .mpa(mpa)
                     .build();
         }
+
         return film;
     }
+
 
     @Override
     public Collection<Film> getAllFilms() {
@@ -99,7 +101,7 @@ public class FilmDbStorage implements FilmStorage {
             ps.setDate(3, java.sql.Date.valueOf(film.getReleaseDate()));
             ps.setInt(4, film.getDuration());
             ps.setInt(5, film.getRate() != null ? film.getRate() : 0);
-            ps.setInt(6, film.getMpa().getId());
+            ps.setLong(6, film.getMpa().getId());
             return ps;
         }, keyHolder);
         int filmId = keyHolder.getKey().intValue();
@@ -159,7 +161,10 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public MPA checkMpa(Film film) {
-        Integer mpaId = film.getMpa().getId();
+        if (film == null) {
+            throw new IllegalArgumentException("Объект film не был инициализирован");
+        }
+        Long mpaId = film.getMpa().getId();
         String sqlMpa = "SELECT * FROM mpa WHERE mpa_id = ?";
         List<MPA> mpaById = jdbcTemplate.query(sqlMpa, FilmDbStorage::makeMpa, mpaId);
         if (mpaById.isEmpty() || mpaById.get(0) == null || !mpaById.get(0).getId().equals(mpaId)) {
@@ -214,7 +219,7 @@ public class FilmDbStorage implements FilmStorage {
 
     public static MPA makeMpa(ResultSet rs, int rowNum) throws SQLException {
         MPA mpa = MPA.builder()
-                .id(rs.getInt("mpa_id"))
+                .id(rs.getLong("mpa_id"))
                 .name(rs.getString("mpa_name")).build();
         return mpa;
     }
@@ -227,7 +232,7 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     public static Film makeFilm(ResultSet rs, int rowNum) throws SQLException {
-        MPA rating = MPA.builder().id(rs.getInt("mpa_id")).name(rs.getString("mpa_name")).build();
+        MPA rating = MPA.builder().id(rs.getLong("mpa_id")).name(rs.getString("mpa_name")).build();
         Film film = Film.builder().id((long) rs.getInt("film_id"))
                 .name(rs.getString("name"))
                 .description(rs.getString("description"))
@@ -237,5 +242,6 @@ public class FilmDbStorage implements FilmStorage {
                 .mpa(rating).build();
         return film;
     }
+
 }
 

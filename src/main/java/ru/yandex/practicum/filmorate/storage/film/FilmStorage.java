@@ -4,13 +4,14 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
 
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
 
 public interface FilmStorage {
 
 
-    Film getFilm(int id);
+    Film getFilm(Long id) throws SQLException;
 
     Collection<Film> getAllFilms();
 

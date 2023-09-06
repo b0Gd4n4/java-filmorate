@@ -9,10 +9,10 @@ import lombok.extern.jackson.Jacksonized;
 @Builder
 @Jacksonized
 public class MPA {
-    private Integer id;
+    private Long id;
     private String name;
 
-    public MPA(Integer id, String name) {
+    public MPA(Long id, String name) {
         this.id = id;
         this.name = name;
     }

@@ -1,10 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import lombok.extern.jackson.Jacksonized;
 import ru.yandex.practicum.filmorate.marker.Marker;
 
@@ -23,14 +20,14 @@ public class Film {
     @NotNull(groups = {Marker.Update.class})
     private Long id;
     @NotBlank
-    private final String name;
+    private String name;
     @Size(max = 200)
-    private final String description;
+    private String description;
     @Past
-    private final LocalDate releaseDate;
+    private LocalDate releaseDate;
     @Positive
-    private final Integer duration;
-    private final Integer rate;
+    private Integer duration;
+    private Integer rate;
     private MPA mpa;
     private List<Genre> genres;
     private Set<Integer> likes;
@@ -46,4 +43,6 @@ public class Film {
     public int numberOfLikes() {
         return likes.size();
     }
+
+
 }

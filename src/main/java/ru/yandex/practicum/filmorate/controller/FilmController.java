@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
+import java.sql.SQLException;
 import java.util.Collection;
 
 @Slf4j
@@ -21,36 +22,43 @@ public class FilmController {
 
     @GetMapping
     private Collection<Film> getAllFilms() {
+        log.info("Запрос на получение всех фильмов.");
         return filmService.getAllFilms();
     }
 
     @GetMapping(value = "/{id}")
-    private Film getFilm(@PathVariable int id) {
+    private Film getFilm(@PathVariable Long id) throws SQLException {
+        log.info("Запрос на получения фильма {} по id", id);
         return filmService.getFilmById(id);
     }
 
     @GetMapping(value = "/popular")
     private Collection<Film> getPopularFilms(@RequestParam(required = false, defaultValue = "10") int count) {
+        log.info("Получения списка топ {} фильмов по лайкам.", count);
         return filmService.getPopularFilms(count);
     }
 
     @PostMapping
     private Film addFilm(@Valid @RequestBody Film film) {
+        log.info("Добавлен новый фильм {}", film);
         return filmService.addFilm(film);
     }
 
     @PutMapping
-    private Film updateFilm(@Validated({Marker.Update.class}) @RequestBody Film film) {
+    private Film updateFilm(@Validated({Marker.Update.class}) @RequestBody Film film) throws SQLException {
+        log.info("Запрос на изменение фильма {}. Фильм изменён.", film);
         return filmService.updateFilm(film);
     }
 
     @PutMapping(value = "/{id}/like/{userId}")
     private void makeLike(@PathVariable int id, @PathVariable int userId) {
+        log.info("Фильм с id={} лайкнул пользователь {}.", id, userId);
         filmService.makeLike(id, userId);
     }
 
     @DeleteMapping(value = "/{id}/like/{userId}")
     private void deleteLike(@PathVariable int id, @PathVariable Long userId) {
         filmService.deleteLike(id, userId);
+        log.info("Пользователь {} удалил лайк с фильма {}.", id, userId);
     }
 }

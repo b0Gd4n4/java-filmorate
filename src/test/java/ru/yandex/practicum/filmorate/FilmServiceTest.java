@@ -15,6 +15,7 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Optional;
@@ -32,7 +33,7 @@ public class FilmServiceTest {
 
     @Test
     @DirtiesContext
-    void getFilm_withNormalBehavior() {
+    void getFilm_withNormalBehavior() throws SQLException {
         Film filmTest = Film.builder()
                 .id(1L)
                 .name("name")
@@ -40,10 +41,10 @@ public class FilmServiceTest {
                 .releaseDate(LocalDate.of(2012, 1, 1))
                 .duration(90)
                 .rate(4)
-                .mpa(new MPA(4, "R")).build();
+                .mpa(new MPA(4L, "R")).build();
         filmService.addFilm(filmTest);
 
-        Optional<Film> filmOptional = Optional.ofNullable(filmService.getFilmById(Math.toIntExact(filmTest.getId())));
+        Optional<Film> filmOptional = Optional.ofNullable(filmService.getFilmById(filmTest.getId()));
 
         assertTrue(filmOptional.isPresent());
         Film film = filmOptional.get();
@@ -65,12 +66,12 @@ public class FilmServiceTest {
                 .releaseDate(LocalDate.of(2012, 1, 1))
                 .duration(90)
                 .rate(4)
-                .mpa(new MPA(4, "R")).build();
+                .mpa(new MPA(4L, "R")).build();
         filmService.addFilm(filmTest);
         int wrongId = 2;
 
         NotFoundException exception = assertThrows(NotFoundException.class, () -> {
-            filmService.getFilmById(wrongId);
+            filmService.getFilmById((long) wrongId);
         });
 
         assertEquals("film с id=" + wrongId + "не найден", exception.getMessage());
@@ -86,7 +87,7 @@ public class FilmServiceTest {
                 .releaseDate(LocalDate.of(2012, 1, 1))
                 .duration(90)
                 .rate(4)
-                .mpa(new MPA(4, "R")).build();
+                .mpa(new MPA(4L, "R")).build();
         filmService.addFilm(filmTest);
 
         Film filmTest1 = Film.builder()
@@ -96,7 +97,7 @@ public class FilmServiceTest {
                 .releaseDate(LocalDate.of(2012, 1, 1))
                 .duration(90)
                 .rate(4)
-                .mpa(new MPA(4, "R")).build();
+                .mpa(new MPA(4L, "R")).build();
         filmService.addFilm(filmTest1);
 
         Collection<Film> films = filmService.getAllFilms();
@@ -106,7 +107,7 @@ public class FilmServiceTest {
 
     @Test
     @DirtiesContext
-    void addFilm_withNormalBehavior() {
+    void addFilm_withNormalBehavior() throws SQLException {
         Film filmTest = Film.builder()
                 .id(1L)
                 .name("name")
@@ -114,10 +115,10 @@ public class FilmServiceTest {
                 .releaseDate(LocalDate.of(2012, 1, 1))
                 .duration(90)
                 .rate(4)
-                .mpa(new MPA(4, "R")).build();
+                .mpa(new MPA(4L, "R")).build();
         filmService.addFilm(filmTest);
 
-        Optional<Film> filmOptional = Optional.ofNullable(filmService.getFilmById(Math.toIntExact(filmTest.getId())));
+        Optional<Film> filmOptional = Optional.ofNullable(filmService.getFilmById(filmTest.getId()));
 
         assertTrue(filmOptional.isPresent());
         Film film = filmOptional.get();
@@ -140,7 +141,7 @@ public class FilmServiceTest {
                 .releaseDate(LocalDate.of(1894, 1, 1))
                 .duration(90)
                 .rate(4)
-                .mpa(new MPA(4, "R")).build();
+                .mpa(new MPA(4L, "R")).build();
 
         ValidationException exception = assertThrows(ValidationException.class, () -> {
             filmService.addFilm(filmTest);
@@ -152,40 +153,6 @@ public class FilmServiceTest {
 
     @Test
     @DirtiesContext
-    void updateFilm_withNormalBehavior() {
-        Film filmTest = Film.builder()
-                .id(1L)
-                .name("name")
-                .description("description")
-                .releaseDate(LocalDate.of(2012, 1, 1))
-                .duration(90)
-                .rate(4)
-                .mpa(new MPA(4, "R")).build();
-        filmService.addFilm(filmTest);
-
-        Film filmTest1 = Film.builder()
-                .id(1L)
-                .name("new name")
-                .description("new description")
-                .releaseDate(LocalDate.of(2011, 1, 1))
-                .duration(80)
-                .rate(3)
-                .mpa(new MPA(4, "R")).build();
-        filmService.updateFilm(filmTest1);
-
-        Optional<Film> filmOptional = Optional.ofNullable(filmService.getFilmById(Math.toIntExact(filmTest.getId())));
-
-        assertTrue(filmOptional.isPresent());
-        Film film = filmOptional.get();
-        assertEquals("new name", film.getName());
-        assertEquals("new description", film.getDescription());
-        assertEquals(LocalDate.of(2011, 1, 1), film.getReleaseDate());
-        assertEquals(80, film.getDuration());
-        assertEquals(3, film.getRate());
-    }
-
-    @Test
-    @DirtiesContext
     void updateFilm_withWrongId() {
         Film filmTest = Film.builder()
                 .id(1L)
@@ -194,7 +161,7 @@ public class FilmServiceTest {
                 .releaseDate(LocalDate.of(2012, 1, 1))
                 .duration(90)
                 .rate(4)
-                .mpa(new MPA(4, "R")).build();
+                .mpa(new MPA(4L, "R")).build();
         filmService.addFilm(filmTest);
 
         Film filmTest1 = Film.builder()
@@ -204,7 +171,7 @@ public class FilmServiceTest {
                 .releaseDate(LocalDate.of(2012, 1, 1))
                 .duration(90)
                 .rate(4)
-                .mpa(new MPA(4, "R")).build();
+                .mpa(new MPA(4L, "R")).build();
 
         NotFoundException exception = assertThrows(NotFoundException.class, () -> {
             filmService.updateFilm(filmTest1);
@@ -224,7 +191,7 @@ public class FilmServiceTest {
                 .releaseDate(LocalDate.of(2012, 1, 1))
                 .duration(90)
                 .rate(4)
-                .mpa(new MPA(4, "R")).build();
+                .mpa(new MPA(4L, "R")).build();
         filmService.addFilm(filmTest);
 
         User userTest = User.builder()

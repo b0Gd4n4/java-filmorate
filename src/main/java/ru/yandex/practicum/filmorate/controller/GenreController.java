@@ -22,11 +22,13 @@ public class GenreController {
 
     @GetMapping
     private Collection<Genre> getAllGenres() {
+        log.info("Запрос на получение всех жанров.");
         return genreService.getAllGenres();
     }
 
     @GetMapping(value = "/{id}")
     private Genre getGenreById(@PathVariable int id) {
+        log.info("Запрос на получения жанра {} по id", id);
         return genreService.getGenreById(id);
     }
 }
