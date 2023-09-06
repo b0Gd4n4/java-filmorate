@@ -21,7 +21,7 @@ public class FilmController {
     private final FilmService filmService;
 
     @GetMapping
-    private Collection<Film> getAllFilms() {
+    private Collection<Film> getAllFilms() throws SQLException {
         log.info("Запрос на получение всех фильмов.");
         return filmService.getAllFilms();
     }
@@ -33,7 +33,7 @@ public class FilmController {
     }
 
     @GetMapping(value = "/popular")
-    private Collection<Film> getPopularFilms(@RequestParam(required = false, defaultValue = "10") int count) {
+    private Collection<Film> getPopularFilms(@RequestParam(required = false, defaultValue = "10") int count) throws SQLException {
         log.info("Получения списка топ {} фильмов по лайкам.", count);
         return filmService.getPopularFilms(count);
     }

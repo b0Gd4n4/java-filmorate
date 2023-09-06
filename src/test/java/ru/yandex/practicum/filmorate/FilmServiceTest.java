@@ -79,7 +79,7 @@ public class FilmServiceTest {
 
     @Test
     @DirtiesContext
-    void getAllFilms_withNormalBehavior() {
+    void getAllFilms_withNormalBehavior() throws SQLException {
         Film filmTest = Film.builder()
                 .id(1L)
                 .name("name")
@@ -183,7 +183,7 @@ public class FilmServiceTest {
 
     @Test
     @DirtiesContext
-    void getPopularFilms_withNormalBehavior() {
+    void getPopularFilms_withNormalBehavior() throws SQLException {
         Film filmTest = Film.builder()
                 .id(1L)
                 .name("name")

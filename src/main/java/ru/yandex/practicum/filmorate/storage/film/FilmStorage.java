@@ -13,7 +13,7 @@ public interface FilmStorage {
 
     Film getFilm(Long id) throws SQLException;
 
-    Collection<Film> getAllFilms();
+    Collection<Film> getAllFilms() throws SQLException;
 
     Film addFilm(Film film);
 
@@ -23,7 +23,7 @@ public interface FilmStorage {
 
     void deleteLike(int idFilm, int idUser);
 
-    Collection<Film> getPopularFilms(int count);
+    Collection<Film> getPopularFilms(int count) throws SQLException;
 
     List<Integer> getFilmLikes(Integer id);
 

@@ -48,6 +48,7 @@ public class FilmDbStorage implements FilmStorage {
                     .rate(filmRows.getInt("rate"))
                     .mpa(mpa)
                     .build();
+
         }
 
         return film;
@@ -88,6 +89,7 @@ public class FilmDbStorage implements FilmStorage {
         });
         return filmMap.values();
     }
+
 
     @Override
     public Film addFilm(Film film) {
@@ -139,7 +141,7 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public Collection<Film> getPopularFilms(int count) {
+    public Collection<Film> getPopularFilms(int count) throws SQLException {
         String sqlPopular = "SELECT f.*, g.*, m.mpa_name " +
                 "FROM films f " +
                 "LEFT OUTER JOIN film_genres fg ON fg.film_id = f.film_id " +
@@ -181,6 +183,7 @@ public class FilmDbStorage implements FilmStorage {
         return filmGenres;
     }
 
+
     @Override
     public List<Genre> checkGenre(Film film) {
         List<Genre> filmGenres = new ArrayList<>();
@@ -189,17 +192,26 @@ public class FilmDbStorage implements FilmStorage {
                     .stream()
                     .map(Genre::getId)
                     .collect(Collectors.toSet());
+            String sqlGenresId = "SELECT * FROM genres WHERE genre_id IN (" +
+                    String.join(",", Collections.nCopies(genreSet.size(), "?")) + ")";
+            List<Genre> genresById = jdbcTemplate.query(sqlGenresId, FilmDbStorage::makeGenre, genreSet.toArray());
             for (Integer id : genreSet) {
-                String sqlGenresId = "SELECT * FROM genres WHERE genre_id = ?";
-                List<Genre> genresById = jdbcTemplate.query(sqlGenresId, FilmDbStorage::makeGenre, id);
-                if (genresById.isEmpty() || genresById.get(0) == null || !genresById.get(0).getId().equals(id)) {
+                boolean found = false;
+                for (Genre genre : genresById) {
+                    if (genre.getId().equals(id)) {
+                        found = true;
+                        filmGenres.add(genre);
+                        break;
+                    }
+                }
+                if (!found) {
                     throw new NotFoundException(String.format("Не найден Genre с id: %s", id));
                 }
-                filmGenres.add(genresById.get(0));
             }
         }
         return filmGenres;
     }
+
 
     @Override
     public void insertFilmGenres(Film film) {
@@ -243,5 +255,9 @@ public class FilmDbStorage implements FilmStorage {
         return film;
     }
 
+
 }
+
+
+
 

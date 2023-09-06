@@ -37,7 +37,7 @@ public class FilmService {
         return film;
     }
 
-    public Collection<Film> getAllFilms() {
+    public Collection<Film> getAllFilms() throws SQLException {
         return filmStorageDb.getAllFilms();
     }
 
@@ -79,7 +79,7 @@ public class FilmService {
         filmStorageDb.deleteLike(idFilm, Math.toIntExact(idUser));
     }
 
-    public Collection<Film> getPopularFilms(int count) {
+    public Collection<Film> getPopularFilms(int count) throws SQLException {
         if (count < 1) {
             log.info("count не может быть отрицательным.");
             throw new NotFoundException("count не может быть отрицательным.");
