@@ -35,6 +35,7 @@ public class ErrorHandler {
         log.error(ex.getMessage());
         return Map.of(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
+
     @ExceptionHandler(Throwable.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Error handleThrowable(final Throwable e) {
