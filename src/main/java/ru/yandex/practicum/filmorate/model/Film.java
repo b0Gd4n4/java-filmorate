@@ -1,14 +1,16 @@
 package ru.yandex.practicum.filmorate.model;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.jackson.Jacksonized;
 import ru.yandex.practicum.filmorate.marker.Marker;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 
@@ -16,6 +18,7 @@ import java.util.Set;
 @AllArgsConstructor
 @Getter
 @Setter
+@Jacksonized
 public class Film {
     @NotNull(groups = {Marker.Update.class})
     private Long id;
@@ -26,11 +29,14 @@ public class Film {
     @Past
     private LocalDate releaseDate;
     @Positive
-    private int duration;
-    private final Set<Long> likes = new HashSet<>();
+    private Integer duration;
+    private Integer rate;
+    private MPA mpa;
+    private List<Genre> genres;
+    private Set<Integer> likes;
 
     public void addLike(Long userId) {
-        likes.add(userId);
+        likes.add(Math.toIntExact(userId));
     }
 
     public boolean removeLike(Long userId) {
@@ -41,14 +47,5 @@ public class Film {
         return likes.size();
     }
 
-    @Override
-    public String toString() {
-        return "Film{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", releaseDate=" + releaseDate +
-                ", duration=" + duration +
-                '}';
-    }
+
 }

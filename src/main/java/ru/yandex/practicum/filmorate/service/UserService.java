@@ -3,83 +3,72 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
-@Service
+import static ru.yandex.practicum.filmorate.validator.UserValidator.validateUser;
+
+
 @Slf4j
 @RequiredArgsConstructor
+@Service
 public class UserService {
 
-    private final UserStorage userStorage;
+    private final UserStorage userStorageDb;
 
+
+    public Collection<User> getAllUsers() {
+        return userStorageDb.getAllUsers();
+    }
+
+    public User getUserById(Long id) {
+        User user = userStorageDb.getUser(id);
+        if (user == null) {
+            throw new NotFoundException("User с id " + id + " не найден.");
+        }
+        return user;
+    }
 
     public User createUser(User user) {
-        validate(user);
-        return userStorage.createUser(user);
+        validateUser(user);
+        return userStorageDb.createUser(user);
     }
 
     public User updateUser(User user) {
-        validate(user);
-        return userStorage.updateUser(user);
+        validateUser(user);
+        getUserById((long) Math.toIntExact(user.getId()));
+        return userStorageDb.updateUser(user);
     }
 
-    public List<User> getUsers() {
-        return userStorage.getAllUsers();
+    public void addFriend(Long idUser, Long idFriend) {
+        getUserById(idUser);
+        getUserById(idFriend);
+        userStorageDb.addFriend(Math.toIntExact(idUser), Math.toIntExact(idFriend));
     }
 
-
-    public User findUserById(Long id) {
-        return userStorage.getUserById(id);
+    public void deleteFriend(Long idUser, Long idFriend) {
+        getUserById(idUser);
+        getUserById(idFriend);
+        userStorageDb.deleteFriend(Math.toIntExact(idUser), Math.toIntExact(idFriend));
     }
 
-
-    public void addFriends(Long id, Long friendId) {
-        User user = userStorage.getUserById(id);
-        User friend = userStorage.getUserById(friendId);
-        user.addFriend(friendId);
-        friend.addFriend(id);
-        log.info("Пользователи {} и {} теперь друзья", id, friendId);
+    public List<User> getFriendsById(int idUser) {
+        return userStorageDb.getFriends(idUser);
     }
 
-    public void removeFriends(Long id, Long friendId) {
-        User user = userStorage.getUserById(id);
-        User friend = userStorage.getUserById(friendId);
-        user.removeFriend(friendId);
-        friend.removeFriend(id);
-        log.info("Пользователи {} и {} больше не являются друзьями.", id, friendId);
-    }
-
-    public List<User> getAllFriends(Long id) {
-        return userStorage.getUserById(id)
-                .getFriends()
-                .stream()
-                .map(userStorage::getUserById)
-                .collect(Collectors.toList());
-    }
-
-    public List<User> getCommonFriends(Long id, Long otherId) {
-        final User user = userStorage.getUserById(id);
-        final User other = userStorage.getUserById(otherId);
-        final Set<Long> friends = user.getFriends();
-        final Set<Long> otherFriends = other.getFriends();
-
-        return friends.stream()
-                .filter(otherFriends::contains)
-                .map(userId -> userStorage.getUserById(userId))
-                .collect(Collectors.toList());
-    }
-
-
-    public void validate(User user) throws ValidationException {
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
+    public List<User> haveCommonFriends(Long idUser, Long idFriend) {
+        List<User> friendsUser = getFriendsById(Math.toIntExact(idUser));
+        List<User> friendsFriend = getFriendsById(Math.toIntExact(idFriend));
+        friendsUser.retainAll(friendsFriend);
+        if (friendsUser.isEmpty()) {
+            log.info("Не найдено общих друзей.");
         }
+        return friendsUser;
     }
-}
 
+
+}

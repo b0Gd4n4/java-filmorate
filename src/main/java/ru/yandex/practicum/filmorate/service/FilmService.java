@@ -1,74 +1,90 @@
 package ru.yandex.practicum.filmorate.service;
 
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exceptions.DataNotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.MPA;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.time.LocalDate;
-import java.util.Comparator;
+import java.sql.SQLException;
+import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
-@Service
+import static ru.yandex.practicum.filmorate.validator.FilmValidator.validateFilm;
+
+
 @Slf4j
 @RequiredArgsConstructor
+@Service
 public class FilmService {
 
-    private final FilmStorage filmStorage;
+    private final FilmStorage filmStorageDb;
+    private final UserStorage userStorageDb;
 
-
-    public Film createFilm(Film film) {
-        validate(film);
-        return filmStorage.createFilm(film);
-    }
-
-    public Film updateFilm(Film film) {
-        validate(film);
-        return filmStorage.updateFilm(film);
-    }
-
-    public List<Film> getAllFilms() {
-        return filmStorage.getAllFilms();
-    }
-
-    public Film findFilmById(Long id) {
-        return filmStorage.getFilmById(id);
-    }
-
-
-    public Film addLike(Long id, Long userId) {
-        Film film = filmStorage.getFilmById(id);
-        film.addLike(userId);
-        log.info("Фильм с id={} лайкнул пользователь {}.", film.getId(), userId);
+    public Film getFilmById(Long id) throws SQLException {
+        Film film = filmStorageDb.getFilm(id);
+        if (film == null) {
+            throw new NotFoundException("film с id=" + id + "не найден");
+        }
+        List<Genre> genres = filmStorageDb.getGenres(Math.toIntExact(id));
+        film.setGenres(genres);
         return film;
     }
 
-    public Film removeLike(Long id, Long userId) {
-        Film film = filmStorage.getFilmById(id);
-        boolean result = film.removeLike(userId);
-        if (!result) {
-            throw new DataNotFoundException("Лайк пользователя " + userId + " не найден");
-        }
-        log.info("Пользователь удалил лайк с фильма.");
+    public Collection<Film> getAllFilms() throws SQLException {
+        return filmStorageDb.getAllFilms();
+    }
+
+    public Film addFilm(Film film) {
+        validateFilm(film);
+        MPA mpa = filmStorageDb.checkMpa(film);
+        List<Genre> genres = filmStorageDb.checkGenre(film);
+        Film film1 = filmStorageDb.addFilm(film);
+        film1.setMpa(mpa);
+        film1.setGenres(genres);
+        filmStorageDb.insertFilmGenres(film1);
         return film;
     }
 
-    public List<Film> getTopFilms(Integer count) {
-        return filmStorage.getAllFilms().stream()
-                .sorted(Comparator.comparingInt(Film::numberOfLikes).reversed())
-                .limit(count)
-                .collect(Collectors.toList());
+    public Film updateFilm(Film film) throws SQLException {
+        validateFilm(film);
+        Film film2 = getFilmById(film.getId());
+        film.setRate(film2.getRate());
+        MPA mpa = filmStorageDb.checkMpa(film);
+        List<Genre> genres = filmStorageDb.checkGenre(film);
+        Film film1 = filmStorageDb.updateFilm(film);
+        film1.setMpa(mpa);
+        film1.setGenres(genres);
+        filmStorageDb.deleteFilmGenres(film1);
+        filmStorageDb.insertFilmGenres(film1);
+        return film1;
     }
 
-    public void validate(Film film) throws ValidationException {
-        if (film.getReleaseDate().isBefore(LocalDate.parse("1895-12-28"))) {
-            throw new ValidationException("Дата указана неккоректно.");
+
+    public void makeLike(int idFilm, int idUser) {
+        filmStorageDb.makeLike(idFilm, idUser);
+    }
+
+    public void deleteLike(int idFilm, Long idUser) {
+        User user = userStorageDb.getUser(idUser);
+        if (user == null) {
+            throw new NotFoundException("User с id " + idUser + " не найден.");
         }
+        filmStorageDb.deleteLike(idFilm, Math.toIntExact(idUser));
     }
 
-
+    public Collection<Film> getPopularFilms(int count) throws SQLException {
+        if (count < 1) {
+            log.info("count не может быть отрицательным.");
+            throw new NotFoundException("count не может быть отрицательным.");
+        }
+        return filmStorageDb.getPopularFilms(count);
+    }
 }
+
